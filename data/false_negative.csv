@@ -1,0 +1,4 @@
+num_events,num_sessions,num_songs,num_ads,thumbs_up,thumbs_down,help_events,error_events,downgrade_events,distinct_artists,distinct_songs,is_paid,days_on_platform,activity_span_days,songs_per_session,ads_per_session,thumbs_up_ratio,true,pred
+216,5,154,18,7,3,2,0,0,149,153,0,85.0,18,30.8,3.6,0.6363636363636364,1,0
+349,11,258,22,10,10,1,1,0,233,252,0,87.0,37,23.454545454545453,2.0,0.4761904761904761,1,0
+1498,36,1169,69,56,36,7,0,6,861,1076,1,75.0,47,32.47222222222222,1.9166666666666667,0.6021505376344086,1,0
