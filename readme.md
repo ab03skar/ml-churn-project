@@ -24,10 +24,10 @@
 ```
 ml-churn-project/
 │
-├─ data/                 # البيانات الخام والبيانات المعالجة
-├─ scripts/              # سكربتات الميزات، الملصقات، التدريب، وإعادة التدريب
-├─ models/               # النموذج المحفوظ وملفات التقييم
-├─ notebooks/            # دفاتر التجارب والاستكشاف
+├─ data/                 
+├─ scripts/             
+├─ models/               
+├─ notebooks/            
 ├─ requirements.txt
 ├─ .gitignore
 └─ README.md
@@ -42,7 +42,7 @@ git clone <REPO_URL>
 cd ml-churn-project
 
 python -m venv .venv
-source .venv/Scripts/activate   # في Windows عبر Git Bash
+source .venv/Scripts/activate   
 
 pip install -r requirements.txt
 ```
@@ -64,7 +64,7 @@ python scripts/create_labels.py
 
 ---
 
-### **٢) إنشاء الميزات (Features)**
+### **٢) إنشاء ال(Features)**
 
 تحويل سلوك المستخدم إلى سمات رقمية:
 عدد الأغاني، الإعلانات، الجلسات، الفنانين، نسب التفاعل، وغيرها.
@@ -121,8 +121,8 @@ python scripts/retrain.py
 
 السكربت يقوم بـ:
 
-1. إعادة إنشاء الملصقات
-2. إعادة حساب الميزات
+1. إعادة إنشاء الlabels
+2. إعادة حساب الfeatures
 3. إعادة بناء بيانات التدريب
 4. تدريب نموذج جديد
 5. حفظ سجل بتاريخ ووقت كل عملية تدريب في `retrain_history/`
@@ -135,8 +135,6 @@ python scripts/retrain.py
 
 * تجربة نماذج إضافية مثل XGBoost أو Logistic Regression
 * ضبط المعاملات (Hyperparameter Tuning)
-* إضافة مراقبة لظاهرة Drift
-* تقديم واجهة API للتنبؤ الفوري
 
 ---
 
