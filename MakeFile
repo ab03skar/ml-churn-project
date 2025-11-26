@@ -1,0 +1,17 @@
+install:
+	pip install -r requirements.txt
+
+train:
+	python scripts/train_model.py
+
+retrain:
+	python scripts/retrain.py
+
+api:
+	uvicorn api.main:app --reload
+
+docker-build:
+	docker build -t churn-api .
+
+docker-run:
+	docker run -p 8000:8000 churn-api

@@ -1,0 +1,10 @@
+artifact_location: file:C:\Users\zxcvk\Desktop\personal\thamanyah\ml-churn-project\mlruns/846988049777625086/models/m-8526e1659822419cb4333cdaa0c9286e/artifacts
+creation_timestamp: 1764153327415
+experiment_id: '846988049777625086'
+last_updated_timestamp: 1764153333065
+model_id: m-8526e1659822419cb4333cdaa0c9286e
+model_type: null
+name: model
+source_run_id: c574943c074d403c9557dc8790ecea8b
+status: 2
+status_message: null

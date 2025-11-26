@@ -1,0 +1,19 @@
+[
+  "num_events",
+  "num_sessions",
+  "num_songs",
+  "num_ads",
+  "thumbs_up",
+  "thumbs_down",
+  "help_events",
+  "error_events",
+  "downgrade_events",
+  "distinct_artists",
+  "distinct_songs",
+  "is_paid",
+  "days_on_platform",
+  "activity_span_days",
+  "songs_per_session",
+  "ads_per_session",
+  "thumbs_up_ratio"
+]
