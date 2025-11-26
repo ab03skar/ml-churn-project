@@ -1,15 +1,8 @@
-
-# مشروع التنبؤ بترك العملاء (Churn Prediction)
+# مشروع التنبؤ بترك العملاء 
 
 ## ١. نظرة عامة
 
-هذا المشروع يقدّم خطًّا واضحًا لمعالجة بيانات استخدام المنصّة، وبناء نموذج يتنبّأ باحتمالية مغادرة المستخدم للخدمة.
-تم تنفيذ الخطوات المطلوبة في التكليف بدقّة:
-
-1. **قراءة البيانات وتنظيفها وتحليلها**
-2. **استخراج السمات وبناء نموذج للتنبؤ بالـChurn**
-3. **تصميم نظام لإعادة التدريب الدوري لمواجهة تغيّر البيانات**
-4. **تهيئة المشروع ومشاركته عبر GitHub**
+هذا المشروع يقدّم نظامًا متكاملاً لمعالجة بيانات الاستخدام، واستخراج السمات، وتدريب نموذج للتنبؤ باحتمالية مغادرة المستخدمين، إضافةً إلى نظام إعادة تدريب، وواجهة API، وأدوات مراقبة وانحراف بيانات، وتتبّع التجارب باستخدام MLflow
 
 ---
 
@@ -18,10 +11,37 @@
 ```
 ml-churn-project/
 │
-├─ data/                 
-├─ scripts/             
-├─ models/               
-├─ notebooks/            
+├─ data/
+│   ├─ user_labels.csv
+│   ├─ user_features.csv
+│   ├─ training_data.csv
+│   ├─ model_predictions.csv
+│   ├─ false_negative.csv
+│   └─ false_positive.csv
+│
+├─ models/
+│   ├─ churn_model.joblib
+│   ├─ feature_columns.json
+│   └─ last_metrics.json
+│
+├─ scripts/
+│   ├─ create_labels.py
+│   ├─ create_features.py
+│   ├─ training_data.py
+│   ├─ train_model.py
+│   ├─ retrain.py
+│   ├─ create_baseline_stats.py
+│   └─ monitor_drift.py
+│
+├─ api/
+│   └─ main.py
+│
+├─ mlruns/  ← سجلات MLflow
+├─ retrain_history/
+├─ monitoring_reports/
+├─ notebooks/
+├─ Dockerfile
+├─ Makefile
 ├─ requirements.txt
 ├─ .gitignore
 └─ README.md
@@ -31,55 +51,65 @@ ml-churn-project/
 
 ## ٣. التثبيت والتشغيل
 
+### إنشاء البيئة
+
 ```bash
-git clone <REPO_URL>
-cd ml-churn-project
-
 python -m venv .venv
-source .venv/Scripts/activate   
+source .venv/Scripts/activate
+```
 
+### تثبيت المتطلبات
+
+```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-## ٤. خط معالجة البيانات
+## ٤. خط معالجة البيانات (Data Pipeline)
 
-### **١) إنشاء ملصقات المستخدمين (Labels)**
+يتم تنفيذ خط معالجة البيانات عبر ٣ سكربتات رئيسية:
 
-يتم تحديد المستخدم الذي قام بإلغاء الخدمة بناءً على ظهور حدث
-`Cancellation Confirmation`.
+### ١) إنشاء الملصقات (Labels)
 
 ```bash
 python scripts/create_labels.py
 ```
 
-الناتج → `data/user_labels.csv`
+يُصنَّف المستخدم كـ **منسحب (churn)** إذا ظهر لديه حدث:
 
----
+```
+Cancellation Confirmation
+```
 
-### **٢) إنشاء ال(Features)**
+الناتج: `data/user_labels.csv`
 
-تحويل سلوك المستخدم إلى سمات رقمية:
-عدد الأغاني، الإعلانات، الجلسات، الفنانين، نسب التفاعل، وغيرها.
+### ٢) إنشاء السمات (Features)
 
 ```bash
 python scripts/create_features.py
 ```
 
-الناتج → `data/user_features.csv`
+يتم حساب مجموعة كبيرة من السمات:
 
----
+* عدد الأغاني
+* عدد الإعلانات
+* عدد الجلسات
+* عدد الأخطاء
+* عدد الفنانين المميزين
+* نسبة التفاعل (thumbs_up_ratio)
+* مدة الاستخدام وغيرها
 
-### **٣) بناء بيانات التدريب**
+الناتج: `data/user_features.csv`
 
-دمج الميزات والملصقات في ملف واحد جاهز للنمذجة.
+### ٣) بناء بيانات التدريب
 
 ```bash
 python scripts/training_data.py
 ```
 
-الناتج → `data/training_data.csv`
+دمج السمات والملصقات.
+الناتج: `data/training_data.csv`
 
 ---
 
@@ -89,50 +119,176 @@ python scripts/training_data.py
 python scripts/train_model.py
 ```
 
-النظام يقوم بـ:
+### يقوم السكربت بـ:
 
-* تقسيم البيانات إلى تدريب واختبار
+* تقسيم البيانات (Train/Test) بطريقة stratified
 * تدريب نموذج Random Forest
-* حفظ النموذج والنتائج
-* استخراج ملفات الأخطاء (false positive / false negative)
+* حفظ النموذج
+* حفظ أعمدة الميزات للمزامنة مع الـAPI
+* استخراج ملفات الأخطاء (False Positive / False Negative)
+* تسجيل التجربة باستخدام MLflow
 
 النواتج:
 
 * `models/churn_model.joblib`
+* `models/feature_columns.json`
 * `models/last_metrics.json`
-* `data/model_predictions.csv`
-* `data/false_negative.csv`, `data/false_positive.csv`
+* ملفات الأخطاء داخل data/
 
 ---
 
 ## ٦. إعادة التدريب الدوري
 
-للتعامل مع تغيّر سلوك المستخدمين بمرور الوقت، تم بناء سكربت يعيد بناء كل شيء:
+لإعادة بناء النموذج مع تغير البيانات:
 
 ```bash
 python scripts/retrain.py
 ```
 
-السكربت يقوم بـ:
+### يقوم بـ:
 
-1. إعادة إنشاء الlabels
-2. إعادة حساب الfeatures
-3. إعادة بناء بيانات التدريب
+1. إعادة إنشاء labels
+2. إعادة إنشاء features
+3. إعادة بناء training_data
 4. تدريب نموذج جديد
-5. حفظ سجل بتاريخ ووقت كل عملية تدريب في `retrain_history/`
+5. حفظ النتائج داخل `retrain_history/`
+6. تسجيل التجربة عبر MLflow
 
-يمكن جدولة هذا السكربت يوميًا أو أسبوعيًا عبر **Windows Task Scheduler**.
-
----
-
-## ٧. لمحة مستقبلية
-
-* تجربة نماذج إضافية مثل XGBoost أو Logistic Regression
-* ضبط المعاملات (Hyperparameter Tuning)
+يمكن تشغيله أسبوعيًا عبر Task Scheduler.
 
 ---
 
-## ٨. كلمة أخيرة
+## ٧. واجهة البرمجة (API) باستخدام FastAPI
 
-هذا المشروع مبني ليعكس طريقة عمل منظومات البيانات في الشركات الرقمية:
-خط واضح للمعالجة، نموذج قابل للتطوير، ونظام تدريب دوري يضمن بقاء التوقعات قريبة من الواقع دائمًا.
+تشغيل الواجهة:
+
+```bash
+uvicorn api.main:app --reload
+```
+
+### المسارات:
+
+* **GET /** → فحص عمل الخادم
+* **POST /predict** → استقبال سمات المستخدم وإرجاع:
+
+  * churn_prediction
+  * churn_probability
+
+واجهة التوثيق:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## ٨. التغليف باستخدام Docker
+
+### بناء الحاوية:
+
+```bash
+docker build -t churn-api .
+```
+
+### تشغيلها:
+
+```bash
+docker run -p 8000:8000 churn-api
+```
+
+---
+
+## ٩. Makefile
+
+يُسهّل تنفيذ الأوامر:
+
+```bash
+make train
+make retrain
+make api
+make docker-build
+make docker-run
+```
+
+---
+
+## ١٠. أدوات ضبط الجودة
+
+تم استخدام:
+
+* **ruff** لمسح جودة الكود
+* **black** لتنسيق الكود
+* **pre-commit** لتشغيل الفحوص تلقائيًا قبل أي commit
+
+تفعيل:
+
+```bash
+pre-commit install
+```
+
+---
+
+## ١١. تتبّع التجارب باستخدام MLflow
+
+تم دمج MLflow داخل `train_model.py`:
+
+* تسجيل معاملات النموذج (Params)
+* تسجيل المقاييس (Metrics)
+* حفظ النموذج كـ Artifact
+
+تشغيل الواجهة:
+
+```bash
+mlflow ui --backend-store-uri mlruns
+```
+
+زيارة:
+
+```
+http://127.0.0.1:5000
+```
+
+---
+
+## ١٢. نظام مراقبة انحراف البيانات وانحراف المفهوم
+
+### baseline_stats.py
+
+إنشاء إحصائيات baseline لبيانات التدريب الأصلية.
+
+### monitor_drift.py
+
+يكتشف:
+
+* **انحراف البيانات** (Data Drift)
+* **انحراف المفهوم** (Concept Drift)
+* مقارنة الأداء عبر retrain_history
+
+النواتج داخل `monitoring_reports/`.
+
+---
+
+## ١٣. التحديات والاقتراحات
+
+### التحديات:
+
+* عدم توازن الفئات (churn قليل جدًا)
+* الحاجة لمنع تسرب البيانات
+* صعوبة تحديد churn بدقة
+* اختلاف سلوك المستخدمين عبر الزمن
+
+### الاقتراحات:
+
+* تجربة نماذج مثل XGBoost
+* استخدام Time-based Split بدلاً من Random Split
+* إضافة تنبيهات Slack عند حدوث Drift
+* نشر النموذج على خادم كامل مع مراقبة (Prometheus + Grafana)
+
+---
+
+## ١٤. خاتمة
+
+هذا المشروع يقدّم نظامًا متكاملًا يشبه ما يحدث في بيئات العمل الاحترافية:
+معالجة بيانات → بناء نموذج → API → إعادة تدريب → مراقبة → تتبع تجارب → جودة كود → Docker.
+
+وهو جاهز بالكامل للتسليم ضمن تكليف مهندس تعلم آلة في ثمانية.
