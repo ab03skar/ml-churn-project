@@ -88,7 +88,8 @@ def train_and_eval():
         mlflow.log_metric("f1_1", report_dict["1"]["f1-score"])
         mlflow.log_metric("accuracy", report_dict["accuracy"])
 
-        mlflow.sklearn.log_model(model, artifact_path="model")
+        
+        #mlflow.sklearn.log_model(model, artifact_path="model")
         mlflow.log_artifact(models_dir / "last_metrics.json")
         mlflow.log_artifact(models_dir / "feature_columns.json")
 
